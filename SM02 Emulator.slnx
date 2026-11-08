@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="SM02 Emulator/SM02 Emulator.vcxproj" Id="c725f521-92ae-4987-acb9-ae3279ec2e92" />
+</Solution>
