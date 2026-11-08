@@ -1,21 +1,28 @@
-#include <SFML/Graphics.hpp>
+#include <chrono>
+#include <thread>
+#include <iostream>
+#include "CPU.h"
 
-int main()
-{
-    sf::RenderWindow window(sf::VideoMode({ 200, 200 }), "SFML works!");
-    sf::CircleShape shape(100.f);
-    shape.setFillColor(sf::Color::Green);
 
-    while (window.isOpen())
-    {
-        while (const std::optional event = window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-                window.close();
+const double targetHz = 1.0;
+const double nanosecondsPerSec = 1e9;
+const auto intervalNs = std::chrono::nanoseconds(
+    static_cast<long long>(nanosecondsPerSec / targetHz)
+);
+
+int main() {
+    CPU cpu;
+    auto last = std::chrono::high_resolution_clock::now();
+
+    while (!cpu.halted) {
+        auto now = std::chrono::high_resolution_clock::now();
+        auto elapsed = now - last;
+
+        if (elapsed >= intervalNs) {
+            last = now;
+            cpu.clockPulse();
+            std::this_thread::yield();
         }
-
-        window.clear();
-        window.draw(shape);
-        window.display();
     }
+    return 0;
 }
