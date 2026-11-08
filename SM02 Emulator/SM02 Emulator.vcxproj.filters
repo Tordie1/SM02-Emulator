@@ -19,6 +19,9 @@
     <Filter Include="Source Files\Memory">
       <UniqueIdentifier>{3054f74d-2cf9-4d7b-9af2-70d9bf62a2df}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Program Data">
+      <UniqueIdentifier>{26d14133-ca18-413e-82f1-d1bd6c3205b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -38,5 +41,10 @@
     <ClInclude Include="Memory.h">
       <Filter>Source Files\Memory</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data.json">
+      <Filter>Source Files\Program Data</Filter>
+    </None>
   </ItemGroup>
 </Project>

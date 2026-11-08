@@ -38,6 +38,8 @@ public:
 
     Memory memory;
 
+    std::array<uint16_t, 64> screen{};
+
     uint16_t a = 0;
     uint16_t b = 0;
     uint16_t pc = 0;

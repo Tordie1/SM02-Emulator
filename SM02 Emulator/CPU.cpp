@@ -9,7 +9,7 @@ void CPU::NOP() {
     state = CPUState::fetch;
 }
 void CPU::OUT() {
-
+    std::cout << "NOP\n";
 }
 void CPU::HLT() {
 
@@ -58,11 +58,11 @@ void CPU::fetch() {
     case 1: // Load instruction into instruction register
         std::cout << "load instruction\n";
         i = memory.read(mar);
-        opcode = (i && 64512) >> 10; // First 6 bits
-        immVal = (i && 1023); // Last 10 bits
+        opcode = i >> 10; // 1111110000000000
+        immVal = (i & ((1 << 10) - 1));  // 0000001111111111
         std::cout << "instruction: " << std::bitset<16>(i) << "\n";
-        std::cout << "opcode: " << std::bitset<16>(opcode) << "\n";
-        std::cout << "immVal: " << std::bitset<16>(immVal) << "\n";
+        std::cout << "opcode: " << std::bitset<6>(opcode) << "----------\n";
+        std::cout << "immVal: ------" << std::bitset<10>(immVal) << "\n";
         instructionStep = 0;
         state = CPUState::execute;
         break;
