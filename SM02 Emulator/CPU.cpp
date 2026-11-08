@@ -14,6 +14,7 @@ void CPU::OUT() {
 void CPU::HLT() {
 
 }
+// <=== Immediate instructions ===>
 void CPU::LDA_val_imm() {
 
 }
@@ -32,18 +33,187 @@ void CPU::STA_addr_imm() {
 void CPU::STB_addr_imm() {
 
 }
+// <=== Memory instructions ===>
+void CPU::LDA_val_mem() {
+                  
+}                 
+void CPU::LDB_val_mem() {
+
+}
+void CPU::LDA_addr_mem() {
+
+}
+void CPU::LDB_addr_mem() {
+
+}
+void CPU::STA_addr_mem() {
+
+}
+void CPU::STB_addr_mem() {
+
+}
+// <=== Pointer instructions ===>
+void CPU::LDA_PTR() {
+
+}
+void CPU::STA_PTR() {
+
+}
+void CPU::LDP() {
+
+}
+void CPU::PTA() {
+
+}
+void CPU::PSH_A() {
+
+}
+void CPU::PSH_B() {
+
+}
+void CPU::POP_A() {
+
+}
+void CPU::POP_B() {
+
+}
+// <=== Arithmetic ===>
+void CPU::ADD() {
+
+}
+void CPU::SUB() {
+
+}
+void CPU::MUL() {
+
+}
+void CPU::DIV() {
+
+}
+void CPU::REM() {
+
+}
+// <=== Bitwise ===>
+void CPU::AND() {
+
+}
+void CPU::OR() {
+
+}
+void CPU::XOR() {
+
+}
+void CPU::NOT() {
+
+}
+// <=== Shifts ===>
+void CPU::SHL() {
+
+}
+void CPU::SHR() {
+
+}
+void CPU::ROL() {
+
+}
+void CPU::ROR() {
+
+}
+// <=== Control flow ===>
+void CPU::CMP() {
+
+}
+void CPU::JMP() {
+
+}
+void CPU::JE() {
+
+}
+void CPU::JNE() {
+
+}
+void CPU::JG() {
+
+}
+void CPU::JL() {
+
+}
+void CPU::JGE() {
+
+}
+void CPU::JLE() {
+
+}
+void CPU::JC() {
+
+}
+void CPU::JV() {
+
+}
+void CPU::CALL() {
+
+}
+void CPU::RET() {
+
+}
 
 CPU::CPU() {
     instructions = {
         { 0x00, &CPU::NOP },
         { 0x3E, &CPU::OUT },
         { 0x3F, &CPU::HLT },
+        // Immediate instructions
         { 0x01, &CPU::LDA_val_imm },
         { 0x02, &CPU::LDB_val_imm },
         { 0x03, &CPU::LDA_addr_imm },
         { 0x04, &CPU::LDB_addr_imm },
         { 0x05, &CPU::STA_addr_imm },
-        { 0x06, &CPU::STB_addr_imm }
+        { 0x06, &CPU::STB_addr_imm },
+        // Memory instructions
+        { 0x07, &CPU::LDA_val_mem },
+        { 0x08, &CPU::LDB_val_mem },
+        { 0x09, &CPU::LDA_addr_mem },
+        { 0x0A, &CPU::LDB_addr_mem },
+        { 0x0B, &CPU::STA_addr_mem },
+        { 0x0C, &CPU::STB_addr_mem },
+        // Pointer instructions
+        { 0x0D, &CPU::LDA_PTR },
+        { 0x0E, &CPU::STA_PTR },
+        { 0x0F, &CPU::LDP },
+        { 0x10, &CPU::PTA },
+        { 0x11, &CPU::PSH_A },
+        { 0x12, &CPU::PSH_B },
+        { 0x13, &CPU::POP_A },
+        { 0x14, &CPU::POP_B },
+        // Arithmetic
+        { 0x15, &CPU::ADD },
+        { 0x16, &CPU::SUB },
+        { 0x17, &CPU::MUL },
+        { 0x18, &CPU::DIV },
+        { 0x19, &CPU::REM },
+        // Bitwise
+        { 0x1A, &CPU::AND },
+        { 0x1B, &CPU::OR },
+        { 0x1C, &CPU::XOR },
+        { 0x1D, &CPU::NOT },
+        // Shifts
+        { 0x1E, &CPU::SHL },
+        { 0x1F, &CPU::SHR },
+        { 0x20, &CPU::ROL },
+        { 0x21, &CPU::ROR },
+        // Control flow
+        { 0x22, &CPU::CMP },
+        { 0x23, &CPU::JMP },
+        { 0x24, &CPU::JE },
+        { 0x25, &CPU::JNE },
+        { 0x26, &CPU::JG },
+        { 0x27, &CPU::JL },
+        { 0x28, &CPU::JGE },
+        { 0x29, &CPU::JLE },
+        { 0x2A, &CPU::JC },
+        { 0x2B, &CPU::JV },
+        { 0x2C, &CPU::CALL },
+        { 0x2D, &CPU::RET },
     };
 }
 
@@ -51,13 +221,13 @@ void CPU::fetch() {
     switch (instructionStep) {
     case 0: // Fetch instruction address
         std::cout << "fetch instruction address\n";
-        mar = pc;
+        MAR = pc;
         pc++;
         instructionStep++;
         break;
     case 1: // Load instruction into instruction register
         std::cout << "load instruction\n";
-        i = memory.read(mar);
+        i = memory.read(MAR);
         opcode = i >> 10; // 1111110000000000
         immVal = (i & ((1 << 10) - 1));  // 0000001111111111
         std::cout << "instruction: " << std::bitset<16>(i) << "\n";
