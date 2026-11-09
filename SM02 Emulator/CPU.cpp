@@ -5,77 +5,261 @@
 
 void CPU::NOP() {
     std::cout << "NOP\n";
-    pc++;
     state = CPUState::fetch;
 }
 void CPU::OUT() {
-    std::cout << "NOP\n";
+    std::cout << "OUT\n";
+    screen[b] = a;
+    state = CPUState::fetch;
 }
 void CPU::HLT() {
-
+    std::cout << "HLT\n";
+    state = CPUState::halted;
 }
 // <=== Immediate instructions ===>
 void CPU::LDA_val_imm() {
-
+    a = immVal;
+    state = CPUState::fetch;
 }
 void CPU::LDB_val_imm() {
-
+    b = immVal;
+    state = CPUState::fetch;
 }
 void CPU::LDA_addr_imm() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = immVal;
+            instructionStep++;
+            break;
+        case 1:
+            a = memory.read(MAR);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::LDB_addr_imm() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = immVal;
+            instructionStep++;
+            break;
+        case 1:
+            b = memory.read(MAR);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::STA_addr_imm() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = immVal;
+            instructionStep++;
+            break;
+        case 1:
+            memory.write(MAR, a);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::STB_addr_imm() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = immVal;
+            instructionStep++;
+            break;
+        case 1:
+            memory.write(MAR, b);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 // <=== Memory instructions ===>
 void CPU::LDA_val_mem() {
-                  
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            pc++;
+            break;
+        case 1:
+            a = memory.read(MAR);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }                 
 void CPU::LDB_val_mem() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            pc++;
+            break;
+        case 1:
+            b = memory.read(MAR);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::LDA_addr_mem() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            pc++;
+            break;
+        case 1:
+            MAR = memory.read(MAR);
+            instructionStep++;
+            break;
+        case 2:
+            a = memory.read(MAR);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::LDB_addr_mem() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            pc++;
+            break;
+        case 1:
+            MAR = memory.read(MAR);
+            instructionStep++;
+            break;
+        case 2:
+            b = memory.read(MAR);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::STA_addr_mem() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            pc++;
+            break;
+        case 1:
+            MAR = memory.read(MAR);
+            instructionStep++;
+            break;
+        case 2:
+            memory.write(MAR, a);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::STB_addr_mem() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            pc++;
+            break;
+        case 1:
+            MAR = memory.read(MAR);
+            instructionStep++;
+            break;
+        case 2:
+            memory.write(MAR, b);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 // <=== Pointer instructions ===>
 void CPU::LDA_PTR() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = ptr;
+            instructionStep++;
+            break;
+        case 1:
+            a = memory.read(MAR);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::STA_PTR() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = ptr;
+            instructionStep++;
+            break;
+        case 1:
+            memory.write(MAR, a);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::LDP() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            pc++;
+            instructionStep++;
+            break;
+        case 1:
+            ptr = memory.read(MAR);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::PTA() {
-
+    ptr += b;
+    state = CPUState::fetch;
 }
+// For some reason, I messed up the PSH instructions
+// in the CPU, and the SP gets incremented before the
+// value gets stored, and vice versa for POP.
 void CPU::PSH_A() {
-
-}
-void CPU::PSH_B() {
-
+    switch (instructionStep) {
+        case 0:
+            sp++;
+            instructionStep++;
+            break;
+        case 1:
+            memory.write(sp, a);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::POP_A() {
-
+    switch (instructionStep) {
+        case 0:
+            a = memory.read(sp);
+            instructionStep++;
+            break;
+        case 1:
+            sp--;
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
+}
+void CPU::PSH_B() {
+    switch (instructionStep) {
+        case 0:
+            sp++;
+            instructionStep++;
+            break;
+        case 1:
+            memory.write(sp, b);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::POP_B() {
-
+    switch (instructionStep) {
+        case 0:
+            b = memory.read(sp);
+            instructionStep++;
+            break;
+        case 1:
+            sp--;
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 // <=== Arithmetic ===>
 void CPU::ADD() {
@@ -182,8 +366,8 @@ CPU::CPU() {
         { 0x0F, &CPU::LDP },
         { 0x10, &CPU::PTA },
         { 0x11, &CPU::PSH_A },
-        { 0x12, &CPU::PSH_B },
-        { 0x13, &CPU::POP_A },
+        { 0x12, &CPU::POP_A },
+        { 0x13, &CPU::PSH_B },
         { 0x14, &CPU::POP_B },
         // Arithmetic
         { 0x15, &CPU::ADD },
@@ -256,6 +440,5 @@ void CPU::clockPulse() {
             break;
         case CPUState::execute:
             execute();
-            break;
     }
 }

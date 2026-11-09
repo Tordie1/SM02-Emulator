@@ -7,7 +7,8 @@
 enum class CPUState
 {
     fetch,
-    execute
+    execute,
+    halted
 };
 
 class CPU {
@@ -68,13 +69,11 @@ private:
     void CALL();
     void RET();
 
-    CPUState state = CPUState::fetch;
-
     void fetch();
     void execute();
 
     uint8_t opcode = 0;
-    uint8_t immVal = 0;
+    uint16_t immVal = 0;
 
     uint8_t instructionStep = 0;
     uint16_t MAR = 0; // Memory Address Register
@@ -86,6 +85,7 @@ private:
 public:
     CPU();
 
+    CPUState state = CPUState::fetch;
     Memory memory;
 
     std::array<uint16_t, 64> screen{};
@@ -101,8 +101,6 @@ public:
     bool n = false;
     bool c = false;
     bool v = false;
-
-    bool halted = false;
 
     using Instruction = void (CPU::*)();
 

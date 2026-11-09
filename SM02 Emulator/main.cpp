@@ -43,7 +43,7 @@ int main() {
 
     auto last = std::chrono::high_resolution_clock::now();
 
-    while (!cpu.halted) {
+    while (cpu.state != CPUState::halted) {
         auto now = std::chrono::high_resolution_clock::now();
         auto elapsed = now - last;
 
