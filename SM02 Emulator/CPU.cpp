@@ -263,13 +263,58 @@ void CPU::POP_B() {
 }
 // <=== Arithmetic ===>
 void CPU::ADD() {
+    uint32_t result = static_cast<uint32_t>(a) + static_cast<uint32_t>(b);
 
+    bool aSign = a >> 15 & 1 ? true : false;
+    bool bSign = b >> 15 & 1 ? true : false;
+    bool rSign = result >> 15 & 1 ? true : false;
+
+    std::cout << "\naSign: " << aSign;
+    std::cout << "\nbSign: " << bSign;
+    std::cout << "\nrSign: " << rSign;
+
+    z = static_cast<uint16_t>(result) == 0 ? true : false;
+    n = result >> 15 & 1 ? true : false;
+    c = result > std::numeric_limits<uint16_t>::max() ? true : false;
+    v = !(aSign ^ bSign) && (aSign ^ rSign) ? true : false;
+    // Signed carry (V) if the operands have the same sign
+    // and the result has a different sign. This is right,
+    // however the actual CPU has it wrong!
+    // IDK if I should keep the error.
+    a = result;
 }
 void CPU::SUB() {
+    uint32_t result = static_cast<uint32_t>(a) + static_cast<uint32_t>(~b + 1);
 
+    bool aSign = a >> 15 & 1 ? true : false;
+    bool bSign = b >> 15 & 1 ? true : false;
+    bool rSign = result >> 15 & 1 ? true : false;
+
+    std::cout << "\naSign: " << aSign;
+    std::cout << "\nbSign: " << bSign;
+    std::cout << "\nrSign: " << rSign;
+
+    z = static_cast<uint16_t>(result) == 0 ? true : false;
+    n = result >> 15 & 1 ? true : false;
+    c = result > std::numeric_limits<uint16_t>::max() ? true : false;
+    v = (aSign ^ bSign) && !(bSign ^ rSign) ? true : false;
+    a = result;
 }
 void CPU::MUL() {
-
+    if (instructionStep < 2) {
+        switch (instructionStep) {
+            case 0:
+                bool aSign = a >> 15 & 1 ? true : false;
+                ALUA = aSign ? ~a + 1 : a; // ABS of a
+                instructionStep++;
+                break;
+            case 1:
+                bool bSign = b >> 15 & 1 ? true : false;
+                ALUB = bSign ? ~b + 1 : b; // ABS of b
+                instructionStep++;
+                break;
+        }
+    }
 }
 void CPU::DIV() {
 
