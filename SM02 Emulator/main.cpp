@@ -11,7 +11,7 @@
 
 using json = nlohmann::json;
 
-const double targetHz = 1.0;
+const double targetHz = 0.5;
 const double nanosecondsPerSec = 1e9;
 const auto intervalNs = std::chrono::nanoseconds(
     static_cast<long long>(nanosecondsPerSec / targetHz)
@@ -37,9 +37,11 @@ int main() {
     file >> j;
 
     for (const auto& [key, value] : j["data"].items()) {
-        std::cout << "key: " << key << " value: " << std::bitset<16>(value) << "\n";
+        std::cout << "key " << key << " value: " << std::bitset<16>(value) << "\n";
         cpu.memory.write(stringToUint16(key), value);
     }
+
+    cpu.memory.dump();
 
     auto last = std::chrono::high_resolution_clock::now();
 

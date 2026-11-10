@@ -10,4 +10,5 @@ private:
 public:
     uint16_t read(uint16_t address) const;
     void write(uint16_t address, uint16_t value);
+    void dump(bool skipZeroes = true) const;
 };

@@ -397,18 +397,18 @@ void CPU::REM() {
     if (instructionStep < 34) {
         bool evenStep = instructionStep & 1 ? true : false;
         switch (evenStep) {
-        case true:
-            ALUR = (ALUR << 1) + (ALUA >> 15);
-            ALUA = ALUA << 1;
-            ALUQ = ALUQ << 1;
-            break;
-        case false:
-            temp = ALUR + (~ALUB + 1); // R - B, idk if I can just to ALUR - ALUB
-            if (((temp >> 15) & 1) == 0) {
-                ALUR = temp;
-                ALUQ++;
-            }
-            break;
+            case true:
+                ALUR = (ALUR << 1) + (ALUA >> 15);
+                ALUA = ALUA << 1;
+                ALUQ = ALUQ << 1;
+                break;
+            case false:
+                temp = ALUR + (~ALUB + 1); // R - B, idk if I can just to ALUR - ALUB
+                if (((temp >> 15) & 1) == 0) {
+                    ALUR = temp;
+                    ALUQ++;
+                }
+                break;
         }
         return;
     }
@@ -418,66 +418,255 @@ void CPU::REM() {
 }
 // <=== Bitwise ===>
 void CPU::AND() {
-
+    a = a & b;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::OR() {
-
+    a = a | b;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::XOR() {
-
+    a = a ^ b;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::NOT() {
-
+    a = ~a;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 // <=== Shifts ===>
 void CPU::SHL() {
-
+    a = a << 1;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::SHR() {
-
+    a = a >> 1;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::ROL() {
-
+    a = (a << 1) | (a >> 15);
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::ROR() {
-
+    a = (a >> 1) | (a << 15);
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 // <=== Control flow ===>
-void CPU::CMP() {
+void CPU::CMP() { // Exactly just SUB, just doesn't write to a, could be optimized
+    uint32_t result = static_cast<uint32_t>(a) + static_cast<uint32_t>(~b + 1);
 
+    bool aSign = a >> 15 & 1 ? true : false;
+    bool bSign = b >> 15 & 1 ? true : false;
+    bool rSign = result >> 15 & 1 ? true : false;
+
+    std::cout << "\naSign: " << aSign;
+    std::cout << "\nbSign: " << bSign;
+    std::cout << "\nrSign: " << rSign;
+
+    z = static_cast<uint16_t>(result) == 0 ? true : false;
+    n = result >> 15 & 1 ? true : false;
+    c = result > std::numeric_limits<uint16_t>::max() ? true : false;
+    v = (aSign ^ bSign) && !(bSign ^ rSign) ? true : false;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::JMP() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            break;
+        case 1:
+            pc = memory.read(MAR);
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::JE() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            break;
+        case 1:
+            if (z == true) {
+                pc = memory.read(MAR);
+            }
+            else {
+                pc++;
+            }
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::JNE() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            break;
+        case 1:
+            if (z == false) {
+                pc = memory.read(MAR);
+            }
+            else {
+                pc++;
+            }
+            state = CPUState::fetch;
+            instructionStep = 0;
+        }
 }
 void CPU::JG() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            break;
+        case 1:
+            if ((z == false) && (n == v)) {
+                pc = memory.read(MAR);
+            }
+            else {
+                pc++;
+            }
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::JL() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            break;
+        case 1:
+            if (n != v) {
+                pc = memory.read(MAR);
+            }
+            else {
+                pc++;
+            }
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::JGE() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            break;
+        case 1:
+            if (n == v) {
+                pc = memory.read(MAR);
+            }
+            else {
+                pc++;
+            }
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::JLE() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            break;
+        case 1:
+            if ((z == 1) || (n != v)) {
+                pc = memory.read(MAR);
+            }
+            else {
+                pc++;
+            }
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::JC() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            break;
+        case 1:
+            if (c == 1) {
+                pc = memory.read(MAR);
+            }
+            else {
+                pc++;
+            }
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::JV() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = pc;
+            instructionStep++;
+            break;
+        case 1:
+            if (v == 1) {
+                pc = memory.read(MAR);
+            }
+            else {
+                pc++;
+            }
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
+// REMINDER -- Check these last two functions to make sure they're accurate
+// CALL is currently broken, IDK why
 void CPU::CALL() {
-
+    std::cout << "CALL\n";
+    switch (instructionStep) {
+        case 0:
+            sp++;
+            instructionStep++;
+            break;
+        case 1:
+            memory.write(sp, pc);
+            instructionStep++;
+            break;
+        case 2:
+            MAR = pc;
+            std::cout << "MAR: " << MAR << "\n";
+            instructionStep++;
+            break;
+        case 3:
+            pc = memory.read(MAR);
+            std::cout << "read: " << memory.read(MAR) << "\n";
+            std::cout << "pc: " << pc << "\n";
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 void CPU::RET() {
-
+    switch (instructionStep) {
+        case 0:
+            MAR = sp;
+            instructionStep++;
+            break;
+        case 1:
+            pc = memory.read(sp);
+            instructionStep++;
+            break;
+        case 2:
+            sp--;
+            pc++;
+            state = CPUState::fetch;
+            instructionStep = 0;
+    }
 }
 
 CPU::CPU() {
