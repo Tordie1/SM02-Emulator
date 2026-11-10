@@ -282,6 +282,8 @@ void CPU::ADD() {
     // however the actual CPU has it wrong!
     // IDK if I should keep the error.
     a = result;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::SUB() {
     uint32_t result = static_cast<uint32_t>(a) + static_cast<uint32_t>(~b + 1);
@@ -299,28 +301,120 @@ void CPU::SUB() {
     c = result > std::numeric_limits<uint16_t>::max() ? true : false;
     v = (aSign ^ bSign) && !(bSign ^ rSign) ? true : false;
     a = result;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::MUL() {
+    uint32_t result = 0;
+    // Im pretty sure the cumulative result is stored in ALUQ, but I can't check right now.
+    bool aSign = a >> 15 & 1 ? true : false;
+    bool bSign = b >> 15 & 1 ? true : false;
     if (instructionStep < 2) {
         switch (instructionStep) {
             case 0:
-                bool aSign = a >> 15 & 1 ? true : false;
                 ALUA = aSign ? ~a + 1 : a; // ABS of a
                 instructionStep++;
                 break;
             case 1:
-                bool bSign = b >> 15 & 1 ? true : false;
                 ALUB = bSign ? ~b + 1 : b; // ABS of b
                 instructionStep++;
                 break;
         }
+        return;
     }
+    if (instructionStep < 18) {
+        bool lsbB = ALUB & 1 ? true : false;
+        result = lsbB ? result + ALUA: result;
+        ALUA = ALUA << 1;
+        ALUB = ALUB >> 1;
+        instructionStep++;
+        return;
+    }
+    a = (aSign ^ bSign) ? ~result + 1 : result;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
+// DIV and REM are literally the same algorithm, it just writes
+// either the quotient or remander. Optimization possible.
 void CPU::DIV() {
-
+    uint32_t temp = 0;
+    bool aSign = a >> 15 & 1 ? true : false;
+    bool bSign = b >> 15 & 1 ? true : false;
+    if (instructionStep < 2) {
+        switch (instructionStep) {
+            case 0:
+                ALUA = aSign ? ~a + 1 : a; // ABS of a
+                instructionStep++;
+                break;
+            case 1:
+                ALUB = bSign ? ~b + 1 : b; // ABS of b
+                instructionStep++;
+                break;
+        }
+        return;
+    }
+    // IDK how this works, it just does.
+    if (instructionStep < 34) {
+        bool evenStep = instructionStep & 1 ? true : false;
+        switch (evenStep) {
+            case true:
+                ALUR = (ALUR << 1) + (ALUA >> 15);
+                ALUA = ALUA << 1;
+                ALUQ = ALUQ << 1;
+                break;
+            case false:
+                temp = ALUR + (~ALUB + 1); // R - B, idk if I can just to ALUR - ALUB
+                if (((temp >> 15) & 1) == 0) {
+                    ALUR = temp;
+                    ALUQ++;
+                }
+                break;
+        }
+        return;
+    }
+    a = (aSign ^ bSign) ? ~ALUQ + 1 : ALUQ;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 void CPU::REM() {
-
+    uint32_t temp = 0;
+    bool aSign = a >> 15 & 1 ? true : false;
+    bool bSign = b >> 15 & 1 ? true : false;
+    if (instructionStep < 2) {
+        switch (instructionStep) {
+        case 0:
+            ALUA = aSign ? ~a + 1 : a; // ABS of a
+            instructionStep++;
+            break;
+        case 1:
+            ALUB = bSign ? ~b + 1 : b; // ABS of b
+            instructionStep++;
+            break;
+        }
+        return;
+    }
+    // IDK how this works, it just does.
+    if (instructionStep < 34) {
+        bool evenStep = instructionStep & 1 ? true : false;
+        switch (evenStep) {
+        case true:
+            ALUR = (ALUR << 1) + (ALUA >> 15);
+            ALUA = ALUA << 1;
+            ALUQ = ALUQ << 1;
+            break;
+        case false:
+            temp = ALUR + (~ALUB + 1); // R - B, idk if I can just to ALUR - ALUB
+            if (((temp >> 15) & 1) == 0) {
+                ALUR = temp;
+                ALUQ++;
+            }
+            break;
+        }
+        return;
+    }
+    a = (aSign ^ bSign) ? ~ALUR + 1 : ALUR;
+    state = CPUState::fetch;
+    instructionStep = 0;
 }
 // <=== Bitwise ===>
 void CPU::AND() {
