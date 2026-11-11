@@ -97,6 +97,7 @@ public:
     uint16_t i = 0;
     uint16_t ptr = 0;
     uint8_t sp = 0;
+    uint16_t spOffset = 0xFF00;
 
     bool z = false;
     bool n = false;

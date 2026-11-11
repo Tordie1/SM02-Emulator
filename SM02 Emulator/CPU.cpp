@@ -4,16 +4,13 @@
 #include <bitset>
 
 void CPU::NOP() {
-    std::cout << "NOP\n";
     state = CPUState::fetch;
 }
 void CPU::OUT() {
-    std::cout << "OUT\n";
     screen[b] = a;
     state = CPUState::fetch;
 }
 void CPU::HLT() {
-    std::cout << "HLT\n";
     state = CPUState::halted;
 }
 // <=== Immediate instructions ===>
@@ -220,7 +217,7 @@ void CPU::PSH_A() {
             instructionStep++;
             break;
         case 1:
-            memory.write(sp, a);
+            memory.write(sp + spOffset, a);
             state = CPUState::fetch;
             instructionStep = 0;
     }
@@ -228,7 +225,7 @@ void CPU::PSH_A() {
 void CPU::POP_A() {
     switch (instructionStep) {
         case 0:
-            a = memory.read(sp);
+            a = memory.read(sp + spOffset);
             instructionStep++;
             break;
         case 1:
@@ -244,7 +241,7 @@ void CPU::PSH_B() {
             instructionStep++;
             break;
         case 1:
-            memory.write(sp, b);
+            memory.write(sp + spOffset, b);
             state = CPUState::fetch;
             instructionStep = 0;
     }
@@ -252,7 +249,7 @@ void CPU::PSH_B() {
 void CPU::POP_B() {
     switch (instructionStep) {
         case 0:
-            b = memory.read(sp);
+            b = memory.read(sp + spOffset);
             instructionStep++;
             break;
         case 1:
@@ -268,10 +265,6 @@ void CPU::ADD() {
     bool aSign = a >> 15 & 1 ? true : false;
     bool bSign = b >> 15 & 1 ? true : false;
     bool rSign = result >> 15 & 1 ? true : false;
-
-    std::cout << "\naSign: " << aSign;
-    std::cout << "\nbSign: " << bSign;
-    std::cout << "\nrSign: " << rSign;
 
     z = static_cast<uint16_t>(result) == 0 ? true : false;
     n = result >> 15 & 1 ? true : false;
@@ -291,10 +284,6 @@ void CPU::SUB() {
     bool aSign = a >> 15 & 1 ? true : false;
     bool bSign = b >> 15 & 1 ? true : false;
     bool rSign = result >> 15 & 1 ? true : false;
-
-    std::cout << "\naSign: " << aSign;
-    std::cout << "\nbSign: " << bSign;
-    std::cout << "\nrSign: " << rSign;
 
     z = static_cast<uint16_t>(result) == 0 ? true : false;
     n = result >> 15 & 1 ? true : false;
@@ -466,10 +455,6 @@ void CPU::CMP() { // Exactly just SUB, just doesn't write to a, could be optimiz
     bool bSign = b >> 15 & 1 ? true : false;
     bool rSign = result >> 15 & 1 ? true : false;
 
-    std::cout << "\naSign: " << aSign;
-    std::cout << "\nbSign: " << bSign;
-    std::cout << "\nrSign: " << rSign;
-
     z = static_cast<uint16_t>(result) == 0 ? true : false;
     n = result >> 15 & 1 ? true : false;
     c = result > std::numeric_limits<uint16_t>::max() ? true : false;
@@ -626,27 +611,22 @@ void CPU::JV() {
     }
 }
 // REMINDER -- Check these last two functions to make sure they're accurate
-// CALL is currently broken, IDK why
 void CPU::CALL() {
-    std::cout << "CALL\n";
     switch (instructionStep) {
         case 0:
             sp++;
             instructionStep++;
             break;
         case 1:
-            memory.write(sp, pc);
+            memory.write(sp + spOffset, pc);
             instructionStep++;
             break;
         case 2:
             MAR = pc;
-            std::cout << "MAR: " << MAR << "\n";
             instructionStep++;
             break;
         case 3:
             pc = memory.read(MAR);
-            std::cout << "read: " << memory.read(MAR) << "\n";
-            std::cout << "pc: " << pc << "\n";
             state = CPUState::fetch;
             instructionStep = 0;
     }
@@ -658,7 +638,7 @@ void CPU::RET() {
             instructionStep++;
             break;
         case 1:
-            pc = memory.read(sp);
+            pc = memory.read(sp + spOffset);
             instructionStep++;
             break;
         case 2:
@@ -732,19 +712,19 @@ CPU::CPU() {
 void CPU::fetch() {
     switch (instructionStep) {
     case 0: // Fetch instruction address
-        std::cout << "fetch instruction address\n";
+        //std::cout << "fetch instruction address\n";
         MAR = pc;
         pc++;
         instructionStep++;
         break;
     case 1: // Load instruction into instruction register
-        std::cout << "load instruction\n";
+        //std::cout << "load instruction\n";
         i = memory.read(MAR);
         opcode = i >> 10; // 1111110000000000
         immVal = (i & ((1 << 10) - 1));  // 0000001111111111
-        std::cout << "instruction: " << std::bitset<16>(i) << "\n";
-        std::cout << "opcode: " << std::bitset<6>(opcode) << "----------\n";
-        std::cout << "immVal: ------" << std::bitset<10>(immVal) << "\n";
+        //std::cout << "instruction: " << std::bitset<16>(i) << "\n";
+        //std::cout << "opcode: " << std::bitset<6>(opcode) << "----------\n";
+        //std::cout << "immVal: ------" << std::bitset<10>(immVal) << "\n";
         instructionStep = 0;
         state = CPUState::execute;
         break;
@@ -752,7 +732,7 @@ void CPU::fetch() {
 }
 
 void CPU::execute() {
-    std::cout << "execute\n";
+    //std::cout << "execute\n";
     auto it = instructions.find(opcode);
 
     if (it != instructions.end())
