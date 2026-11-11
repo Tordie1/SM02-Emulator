@@ -7,7 +7,11 @@
 #include <cstdint>
 #include <stdexcept>
 #include <bitset>
+#include <SFML/Graphics.hpp>
+#include <mutex>
 #include "CPU.h"
+
+std::mutex cpuMutex;
 
 using json = nlohmann::json;
 
@@ -27,19 +31,8 @@ static uint16_t stringToUint16(const std::string& str){
     return static_cast<uint16_t>(val);
 }
 
-int main() {
-    CPU cpu;
-
-    // load program data into memory
-
-    std::ifstream file("data.json");
-    json j;
-    file >> j;
-
-    for (const auto& [key, value] : j["data"].items()) {
-        cpu.memory.write(stringToUint16(key), value);
-    }
-
+static void cpuThread(CPU cpu)
+{
     auto last = std::chrono::steady_clock::now();
     double pending = 0.0;
 
@@ -59,5 +52,22 @@ int main() {
             std::this_thread::sleep_for(std::chrono::microseconds((int)(pending * 1000000 / targetHz)));
         }
     }
+    return;
+}
+
+int main() {
+    CPU cpu;
+
+    // load program data into memory
+
+    std::ifstream file("data.json");
+    json j;
+    file >> j;
+
+    for (const auto& [key, value] : j["data"].items()) {
+        cpu.memory.write(stringToUint16(key), value);
+    }
+    std::thread t(cpuThread, cpu);
+    t.join();
     return 0;
 }
