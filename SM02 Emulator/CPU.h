@@ -89,6 +89,8 @@ public:
 
     std::mutex cpuMutex;
 
+    bool forceHLT = false;
+
     CPUState state = CPUState::fetch;
     Memory memory;
 

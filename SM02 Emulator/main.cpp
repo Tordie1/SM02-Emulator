@@ -12,11 +12,7 @@
 
 using json = nlohmann::json;
 
-const double targetHz = 10000;
-const double nanosecondsPerSec = 1e9;
-const auto intervalNs = std::chrono::nanoseconds(
-    static_cast<long long>(nanosecondsPerSec / targetHz)
-);
+const double targetHz = 5000000; // 5 MHz
 
 static uint16_t stringToUint16(const std::string& str){
     size_t pos;
@@ -27,26 +23,30 @@ static uint16_t stringToUint16(const std::string& str){
     }
     return static_cast<uint16_t>(val);
 }
-// The cpu thread is running way slower than it should be. Pls fix.
+
 static void cpuThread(CPU& cpu) {
-    auto last = std::chrono::steady_clock::now();
-    double pending = 0.0;
+    auto start = std::chrono::steady_clock::now();
+    const uint64_t cyclesPerMillisecond = static_cast<uint64_t>(targetHz / 1000);
+    uint64_t targetCycle = 0;
+    uint64_t cycles = 0;
 
-    while (cpu.state != CPUState::halted) {
+    while (true) {
         auto now = std::chrono::steady_clock::now();
-        double elapsed = std::chrono::duration<double>(now - last).count();
-        last = now;
+        double elapsed = std::chrono::duration<double>(now - start).count();
 
-        pending += elapsed * targetHz;
+        targetCycle = static_cast<uint64_t>(elapsed * targetHz);
 
-        while (pending >= 1.0) {
-            pending--;
+        while (cycles < targetCycle) {
+            if (cpu.state == CPUState::halted || cpu.forceHLT) {
+                return;
+            }
+            cycles++;
             cpu.clockPulse();
         }
-
-        if (pending > 0) {
-            std::this_thread::sleep_for(std::chrono::microseconds((int)(pending * 1000000 / targetHz)));
-        }
+        /* IDK how useful these lines are.
+        const auto nextCycleBatch = cycles / cyclesPerMillisecond + 1;
+        std::this_thread::sleep_until(start + std::chrono::milliseconds(nextCycleBatch));
+        */
     }
 }
 
@@ -119,7 +119,7 @@ int main() {
     t2.join();
     {
         std::lock_guard<std::mutex> lock(cpu.cpuMutex);
-        cpu.state = CPUState::halted;
+        cpu.forceHLT = true;
     }
     t1.join();
     return 0;
