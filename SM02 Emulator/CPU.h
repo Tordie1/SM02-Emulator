@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <array>
+#include <mutex>
 
 enum class CPUState
 {
@@ -85,6 +86,8 @@ private:
 
 public:
     CPU();
+
+    std::mutex cpuMutex;
 
     CPUState state = CPUState::fetch;
     Memory memory;

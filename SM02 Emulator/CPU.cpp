@@ -7,6 +7,7 @@ void CPU::NOP() {
     state = CPUState::fetch;
 }
 void CPU::OUT() {
+    std::lock_guard<std::mutex> lock(cpuMutex);
     screen[b] = a;
     state = CPUState::fetch;
 }
