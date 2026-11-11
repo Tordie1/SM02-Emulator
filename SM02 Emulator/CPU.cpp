@@ -298,6 +298,7 @@ void CPU::MUL() {
     // Im pretty sure the cumulative result is stored in ALUQ, but I can't check right now.
     bool aSign = a >> 15 & 1 ? true : false;
     bool bSign = b >> 15 & 1 ? true : false;
+    c = false;
     if (instructionStep < 2) {
         switch (instructionStep) {
             case 0:
@@ -317,8 +318,13 @@ void CPU::MUL() {
         ALUA = ALUA << 1;
         ALUB = ALUB >> 1;
         instructionStep++;
+		if (c == false) {
+			c = result > std::numeric_limits<uint16_t>::max() ? true : false;
+		}
         return;
     }
+	z = static_cast<uint16_t>(result) == 0 ? true : false;
+    n = result >> 15 & 1 ? true : false;
     a = (aSign ^ bSign) ? ~result + 1 : result;
     state = CPUState::fetch;
     instructionStep = 0;
@@ -361,6 +367,8 @@ void CPU::DIV() {
         }
         return;
     }
+    z = static_cast<uint16_t>(ALUQ) == 0 ? true : false;
+    n = ALUQ >> 15 & 1 ? true : false;
     a = (aSign ^ bSign) ? ~ALUQ + 1 : ALUQ;
     state = CPUState::fetch;
     instructionStep = 0;
@@ -401,6 +409,8 @@ void CPU::REM() {
         }
         return;
     }
+    z = static_cast<uint16_t>(ALUR) == 0 ? true : false;
+    n = ALUR >> 15 & 1 ? true : false;
     a = (aSign ^ bSign) ? ~ALUR + 1 : ALUR;
     state = CPUState::fetch;
     instructionStep = 0;
