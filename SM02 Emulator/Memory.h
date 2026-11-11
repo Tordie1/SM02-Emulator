@@ -1,11 +1,9 @@
-#pragma once
-
 #include <cstdint>
-#include <array>
+#include <vector>
 
 class Memory {
 private:
-    std::array<uint16_t, 65536> data{};
+	std::vector<uint16_t> data = std::vector<uint16_t>(65536, 0);
 
 public:
     uint16_t read(uint16_t address) const;

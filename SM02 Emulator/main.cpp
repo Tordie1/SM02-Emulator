@@ -11,13 +11,15 @@
 
 using json = nlohmann::json;
 
-const double targetHz = 0.5;
+// REMINDER - Eventually remove all of the debug printing
+
+const double targetHz = 1.0;
 const double nanosecondsPerSec = 1e9;
 const auto intervalNs = std::chrono::nanoseconds(
     static_cast<long long>(nanosecondsPerSec / targetHz)
 );
 
-uint16_t stringToUint16(const std::string& str) {
+static uint16_t stringToUint16(const std::string& str){
     size_t pos;
     unsigned long val = std::stoul(str, &pos);
 
@@ -43,16 +45,23 @@ int main() {
 
     cpu.memory.dump();
 
-    auto last = std::chrono::high_resolution_clock::now();
+    auto last = std::chrono::steady_clock::now();
+    double pending = 0.0;
 
     while (cpu.state != CPUState::halted) {
-        auto now = std::chrono::high_resolution_clock::now();
-        auto elapsed = now - last;
+        auto now = std::chrono::steady_clock::now();
+        double elapsed = std::chrono::duration<double>(now - last).count();
+        last = now;
 
-        if (elapsed >= intervalNs) {
-            last = now;
+        pending += elapsed * targetHz;
+
+        while (pending >= 1.0) {
+            pending--;
             cpu.clockPulse();
-            std::this_thread::yield();
+        }
+
+        if (pending > 0) {
+            std::this_thread::sleep_for(std::chrono::microseconds((int)(pending * 1000000 / targetHz)));
         }
     }
     return 0;

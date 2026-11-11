@@ -3,6 +3,7 @@
 #include "Memory.h"
 #include <cstdint>
 #include <unordered_map>
+#include <array>
 
 enum class CPUState
 {
