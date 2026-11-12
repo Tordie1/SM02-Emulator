@@ -77,12 +77,14 @@ private:
     uint8_t opcode = 0;
     uint16_t immVal = 0;
 
-    uint8_t instructionStep = 0;
     uint16_t MAR = 0; // Memory Address Register
     uint16_t ALUA = 0; // ALU a
     uint16_t ALUB = 0; // ALU b
     uint16_t ALUR = 0; // ALU remainder
     uint16_t ALUQ = 0; // ALU quotient
+
+    bool aSign = false;
+    bool bSign = false;
 
 public:
     CPU();
@@ -92,6 +94,7 @@ public:
     bool forceHLT = false;
 
     CPUState state = CPUState::fetch;
+    uint8_t instructionStep = 0;
     Memory memory;
 
     std::array<uint16_t, 64> screen{};

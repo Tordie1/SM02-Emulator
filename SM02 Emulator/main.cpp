@@ -40,10 +40,14 @@ static void cpuThread(CPU& cpu) {
 
         while (cycles < targetCycle) {
             if (cpu.state == CPUState::halted || cpu.forceHLT) {
+                //std::cout << "Halted";
                 return;
             }
             cycles++;
             cpu.clockPulse();
+			if (cpu.state == CPUState::fetch && cpu.instructionStep == 0) {
+                //std::cout << "\na:   " << std::bitset<16>(cpu.a) << "\nb:   " << std::bitset<16>(cpu.b) << "\npc:  " << std::bitset<16>(cpu.pc) << "\nptr: " << std::bitset<16>(cpu.ptr) << "\n";
+			}
         }
         /* IDK how useful these lines are.
         const auto nextCycleBatch = cycles / cyclesPerMillisecond + 1;
@@ -79,10 +83,11 @@ static void graphicsThread(CPU& cpu) {
     sf::RectangleShape pixelRect({1.f, 1.f});
     pixelRect.setFillColor(sf::Color::Green);
 
+    /*Trying to set the icon gives an error, and I don't know why.
     sf::Image icon;
     if (icon.loadFromFile("icon.png")) {
         window.setIcon(icon.getSize(), icon.getPixelsPtr());
-    }
+    }*/
 
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent()) {

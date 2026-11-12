@@ -263,8 +263,8 @@ void CPU::POP_B() {
 void CPU::ADD() {
     uint32_t result = static_cast<uint32_t>(a) + static_cast<uint32_t>(b);
 
-    bool aSign = a >> 15 & 1 ? true : false;
-    bool bSign = b >> 15 & 1 ? true : false;
+    aSign = a >> 15 & 1 ? true : false;
+    bSign = b >> 15 & 1 ? true : false;
     bool rSign = result >> 15 & 1 ? true : false;
 
     z = static_cast<uint16_t>(result) == 0 ? true : false;
@@ -282,8 +282,8 @@ void CPU::ADD() {
 void CPU::SUB() {
     uint32_t result = static_cast<uint32_t>(a) + static_cast<uint32_t>(~b + 1);
 
-    bool aSign = a >> 15 & 1 ? true : false;
-    bool bSign = b >> 15 & 1 ? true : false;
+    aSign = a >> 15 & 1 ? true : false;
+    bSign = b >> 15 & 1 ? true : false;
     bool rSign = result >> 15 & 1 ? true : false;
 
     z = static_cast<uint16_t>(result) == 0 ? true : false;
@@ -295,18 +295,16 @@ void CPU::SUB() {
     instructionStep = 0;
 }
 void CPU::MUL() {
-    uint32_t result = 0;
-    // Im pretty sure the cumulative result is stored in ALUQ, but I can't check right now.
-    bool aSign = a >> 15 & 1 ? true : false;
-    bool bSign = b >> 15 & 1 ? true : false;
-    c = false;
     if (instructionStep < 2) {
         switch (instructionStep) {
             case 0:
+                aSign = a >> 15 & 1 ? true : false;
+                c = false;
                 ALUA = aSign ? ~a + 1 : a; // ABS of a
                 instructionStep++;
                 break;
             case 1:
+                bSign = b >> 15 & 1 ? true : false;
                 ALUB = bSign ? ~b + 1 : b; // ABS of b
                 instructionStep++;
                 break;
@@ -315,34 +313,39 @@ void CPU::MUL() {
     }
     if (instructionStep < 18) {
         bool lsbB = ALUB & 1 ? true : false;
-        result = lsbB ? result + ALUA: result;
+        ALUQ = lsbB ? ALUQ + ALUA : ALUQ;
+		//std::cout << "\nALUA: " << std::bitset<16>(ALUA) << "\nALUB: " << std::bitset<16>(ALUB) << "\nALUQ: " << std::bitset<16>(ALUQ) << "\n";
         ALUA = ALUA << 1;
         ALUB = ALUB >> 1;
         instructionStep++;
 		if (c == false) {
-			c = result > std::numeric_limits<uint16_t>::max() ? true : false;
+			c = ALUQ > std::numeric_limits<uint16_t>::max() ? true : false;
 		}
+        if (ALUA == 0 || ALUB == 0) {
+            instructionStep = 18;
+            return;
+        }
         return;
     }
-	z = static_cast<uint16_t>(result) == 0 ? true : false;
-    n = result >> 15 & 1 ? true : false;
-    a = (aSign ^ bSign) ? ~result + 1 : result;
+	z = static_cast<uint16_t>(ALUQ) == 0 ? true : false;
+    n = ALUQ >> 15 & 1 ? true : false;
+    a = (aSign ^ bSign) ? ~ALUQ + 1 : ALUQ;
+    ALUQ = 0;
     state = CPUState::fetch;
     instructionStep = 0;
 }
 // DIV and REM are literally the same algorithm, it just writes
 // either the quotient or remander. Optimization possible.
 void CPU::DIV() {
-    uint32_t temp = 0;
-    bool aSign = a >> 15 & 1 ? true : false;
-    bool bSign = b >> 15 & 1 ? true : false;
     if (instructionStep < 2) {
         switch (instructionStep) {
             case 0:
+                aSign = a >> 15 & 1 ? true : false;
                 ALUA = aSign ? ~a + 1 : a; // ABS of a
                 instructionStep++;
                 break;
             case 1:
+                bool bSign = b >> 15 & 1 ? true : false;
                 ALUB = bSign ? ~b + 1 : b; // ABS of b
                 instructionStep++;
                 break;
@@ -359,7 +362,7 @@ void CPU::DIV() {
                 ALUQ = ALUQ << 1;
                 break;
             case false:
-                temp = ALUR + (~ALUB + 1); // R - B, idk if I can just to ALUR - ALUB
+                uint32_t temp = ALUR + (~ALUB + 1); // R - B, idk if I can just to ALUR - ALUB
                 if (((temp >> 15) & 1) == 0) {
                     ALUR = temp;
                     ALUQ++;
@@ -371,20 +374,21 @@ void CPU::DIV() {
     z = static_cast<uint16_t>(ALUQ) == 0 ? true : false;
     n = ALUQ >> 15 & 1 ? true : false;
     a = (aSign ^ bSign) ? ~ALUQ + 1 : ALUQ;
+    ALUQ = 0;
+    ALUR = 0;
     state = CPUState::fetch;
     instructionStep = 0;
 }
 void CPU::REM() {
-    uint32_t temp = 0;
-    bool aSign = a >> 15 & 1 ? true : false;
-    bool bSign = b >> 15 & 1 ? true : false;
     if (instructionStep < 2) {
         switch (instructionStep) {
         case 0:
+            aSign = a >> 15 & 1 ? true : false;
             ALUA = aSign ? ~a + 1 : a; // ABS of a
             instructionStep++;
             break;
         case 1:
+            bool bSign = b >> 15 & 1 ? true : false;
             ALUB = bSign ? ~b + 1 : b; // ABS of b
             instructionStep++;
             break;
@@ -395,24 +399,26 @@ void CPU::REM() {
     if (instructionStep < 34) {
         bool evenStep = instructionStep & 1 ? true : false;
         switch (evenStep) {
-            case true:
-                ALUR = (ALUR << 1) + (ALUA >> 15);
-                ALUA = ALUA << 1;
-                ALUQ = ALUQ << 1;
-                break;
-            case false:
-                temp = ALUR + (~ALUB + 1); // R - B, idk if I can just to ALUR - ALUB
-                if (((temp >> 15) & 1) == 0) {
-                    ALUR = temp;
-                    ALUQ++;
-                }
-                break;
+        case true:
+            ALUR = (ALUR << 1) + (ALUA >> 15);
+            ALUA = ALUA << 1;
+            ALUQ = ALUQ << 1;
+            break;
+        case false:
+            uint32_t temp = ALUR + (~ALUB + 1); // R - B, idk if I can just to ALUR - ALUB
+            if (((temp >> 15) & 1) == 0) {
+                ALUR = temp;
+                ALUQ++;
+            }
+            break;
         }
         return;
     }
     z = static_cast<uint16_t>(ALUR) == 0 ? true : false;
     n = ALUR >> 15 & 1 ? true : false;
     a = (aSign ^ bSign) ? ~ALUR + 1 : ALUR;
+    ALUQ = 0;
+    ALUR = 0;
     state = CPUState::fetch;
     instructionStep = 0;
 }
