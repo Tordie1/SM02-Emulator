@@ -14,6 +14,8 @@ using json = nlohmann::json;
 
 const double targetHz = 5000000; // 5 MHz
 
+const unsigned int scale = 24;
+
 static uint16_t stringToUint16(const std::string& str){
     size_t pos;
     unsigned long val = std::stoul(str, &pos);
@@ -68,7 +70,6 @@ static bool getScreenPixel(int x, int y, CPU& cpu) {
 }
 
 static void graphicsThread(CPU& cpu) {
-    const unsigned int scale = 16;
     sf::RenderWindow window(sf::VideoMode({ 32 * scale, 32 * scale }), "SM02 Screen");
     window.setFramerateLimit(60);
 
