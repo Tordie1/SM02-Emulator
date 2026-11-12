@@ -79,6 +79,11 @@ static void graphicsThread(CPU& cpu) {
     sf::RectangleShape pixelRect({1.f, 1.f});
     pixelRect.setFillColor(sf::Color::Green);
 
+    sf::Image icon;
+    if (icon.loadFromFile("icon.png")) {
+        window.setIcon(icon.getSize(), icon.getPixelsPtr());
+    }
+
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
@@ -115,8 +120,9 @@ int main() {
     for (const auto& [key, value] : j["data"].items()) {
         cpu.memory.write(stringToUint16(key), value);
     }
-    std::thread t1(cpuThread, std::ref(cpu));
     std::thread t2(graphicsThread, std::ref(cpu));
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::thread t1(cpuThread, std::ref(cpu));
     t2.join();
     {
         std::lock_guard<std::mutex> lock(cpu.cpuMutex);
