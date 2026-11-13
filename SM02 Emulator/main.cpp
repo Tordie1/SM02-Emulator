@@ -12,7 +12,7 @@
 
 using json = nlohmann::json;
 
-const double targetHz = 5000000; // 5 MHz
+const double targetHz = 10000000; // 10 MHz
 
 const unsigned int scale = 24;
 
