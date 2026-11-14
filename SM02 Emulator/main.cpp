@@ -12,9 +12,11 @@
 
 using json = nlohmann::json;
 
-const double targetHz = 10000000; // 10 MHz
+const double targetHz = 5000000; // 5 MHz
 
 const unsigned int scale = 24;
+
+uint64_t dCounter = 0;
 
 static uint16_t stringToUint16(const std::string& str){
     size_t pos;
@@ -46,7 +48,9 @@ static void cpuThread(CPU& cpu) {
             cycles++;
             cpu.clockPulse();
 			if (cpu.state == CPUState::fetch && cpu.instructionStep == 0) {
-                //std::cout << "\na:   " << std::bitset<16>(cpu.a) << "\nb:   " << std::bitset<16>(cpu.b) << "\npc:  " << std::bitset<16>(cpu.pc) << "\nptr: " << std::bitset<16>(cpu.ptr) << "\n";
+                std::cout << "\nc:   " << dCounter;
+                dCounter++;
+                std::cout << "\na:   " << std::bitset<16>(cpu.a) << "\nb:   " << std::bitset<16>(cpu.b) << "\npc:  " << std::bitset<16>(cpu.pc) << "\nptr: " << std::bitset<16>(cpu.ptr) << "\n";
 			}
         }
         /* IDK how useful these lines are.
@@ -83,11 +87,10 @@ static void graphicsThread(CPU& cpu) {
     sf::RectangleShape pixelRect({1.f, 1.f});
     pixelRect.setFillColor(sf::Color::Green);
 
-    /*Trying to set the icon gives an error, and I don't know why.
     sf::Image icon;
     if (icon.loadFromFile("icon.png")) {
         window.setIcon(icon.getSize(), icon.getPixelsPtr());
-    }*/
+    }
 
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent()) {

@@ -369,6 +369,8 @@ void CPU::DIV() {
                 }
                 break;
         }
+        instructionStep++;
+        //std::cout << "\neven: " << evenStep << "\nALUA: " << std::bitset<16>(ALUA) << "\nALUB: " << std::bitset<16>(ALUB) << "\nALUR: " << std::bitset<16>(ALUR) << "\nALUQ: " << std::bitset<16>(ALUQ) << "\n";
         return;
     }
     z = static_cast<uint16_t>(ALUQ) == 0 ? true : false;
@@ -412,6 +414,7 @@ void CPU::REM() {
             }
             break;
         }
+        instructionStep++;
         return;
     }
     z = static_cast<uint16_t>(ALUR) == 0 ? true : false;
