@@ -10,6 +10,17 @@
 #include <SFML/Graphics.hpp>
 #include "CPU.h"
 
+std::ofstream logFile("log.txt", std::ios::app);
+static void log(const std::string& message) {
+
+    if (logFile.is_open()) {
+        logFile << message << std::endl; // std::endl flushes the buffer immediately
+    }
+    else {
+        std::cerr << "Error: Unable to open log file." << std::endl;
+    }
+}
+
 using json = nlohmann::json;
 
 const double targetHz = 5000000; // 5 MHz
@@ -48,12 +59,18 @@ static void cpuThread(CPU& cpu) {
             cycles++;
             cpu.clockPulse();
 			if (cpu.state == CPUState::fetch && cpu.instructionStep == 0) {
-                std::cout << "\nc:   " << dCounter;
+                log("\ncount: " + std::to_string(dCounter));
+                log("a:   " + (std::bitset<16>(cpu.a)).to_string());
+                log("b:   " + (std::bitset<16>(cpu.b)).to_string());
+                log("pc:  " + (std::bitset<16>(cpu.pc)).to_string());
+                log("i:   " + (std::bitset<16>(cpu.i)).to_string());
+                log("ptr: " + (std::bitset<16>(cpu.ptr)).to_string());
+                log("sp:  " + (std::bitset<8>(cpu.sp)).to_string());
                 dCounter++;
-                std::cout << "\na:   " << std::bitset<16>(cpu.a) << "\nb:   " << std::bitset<16>(cpu.b) << "\npc:  " << std::bitset<16>(cpu.pc) << "\nptr: " << std::bitset<16>(cpu.ptr) << "\n";
+                //std::cout << "\na:   " << std::bitset<16>(cpu.a) << "\nb:   " << std::bitset<16>(cpu.b) << "\npc:  " << std::bitset<16>(cpu.pc) << "\nptr: " << std::bitset<16>(cpu.ptr) << std::bitset<16>(cpu.pc) << "\ni: " << std::bitset<16>(cpu.i) << "\nsp: " << std::bitset<16>(cpu.sp) << "\n";
 			}
         }
-        /* IDK how useful these lines are.
+        /* IDK how useful these lines are, I think its worse for performance when the cpu is running at mega hertz.
         const auto nextCycleBatch = cycles / cyclesPerMillisecond + 1;
         std::this_thread::sleep_until(start + std::chrono::milliseconds(nextCycleBatch));
         */
@@ -137,5 +154,6 @@ int main() {
         cpu.forceHLT = true;
     }
     t1.join();
+    logFile.close();
     return 0;
 }
